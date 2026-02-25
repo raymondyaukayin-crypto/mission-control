@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2 } from "lucide-react"
+import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 
 interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
@@ -13,6 +13,7 @@ interface Memory { id: string; title: string; content: string; category: string;
 interface ActivityItem { id: string; action: string; details: string; type: "task" | "memory" | "system" | "search"; timestamp: string }
 interface CalendarEvent { id: string; title: string; startDate: string; type: "task" | "meeting" | "reminder" }
 interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number }
+interface ReportFile { name: string; path: string; type: "report" | "data" | "memory" | "other" }
 
 const defaultTasks: Task[] = [
   { id: "1", title: "研究比特幣投資機會", description: "分析比特幣市場", status: "done", priority: "high", owner: "OpenClaw", category: "投資", createdAt: "2026-02-25T10:00:00Z", updatedAt: "2026-02-25T14:58:00Z" },
@@ -43,6 +44,13 @@ const defaultPortfolio: PortfolioItem[] = [
   { id: "4", name: "iShares BTC ETF", symbol: "IBIT", type: "stock", value: 20000, change24h: 1.8, allocation: 10 },
   { id: "5", name: "Cash", symbol: "CASH", type: "cash", value: 50000, change24h: 0, allocation: 25 },
   { id: "6", name: "US Treasury", symbol: "TLT", type: "bond", value: 10000, change24h: 0.2, allocation: 5 },
+]
+
+const defaultReports: ReportFile[] = [
+  { name: "比特幣投資報告 2026-02-25", path: "reports/bitcoin_investment_report_20260225.md", type: "report" },
+  { name: "偉哥投資文章整理", path: "data/weike_investment/all_articles.md", type: "data" },
+  { name: "工作日誌 2026-02-25", path: "memory/2026-02-25.md", type: "memory" },
+  { name: "主動任務清單", path: "active-tasks.md", type: "other" },
 ]
 
 const STORAGE_KEY = 'mission_control_data'
@@ -271,6 +279,48 @@ function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[
   )
 }
 
+function ReportsView({ reports }: { reports: ReportFile[] }) {
+  const [search, setSearch] = useState("")
+  const filtered = reports.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
+  const getTypeIcon = (t: string) => t === "report" ? <FileText className="w-4 h-4" /> : t === "data" ? <FolderOpen className="w-4 h-4" /> : <Brain className="w-4 h-4" />
+  const getTypeColor = (t: string) => t === "report" ? "bg-blue-500" : t === "data" ? "bg-green-500" : "bg-purple-500"
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            placeholder="搜尋報告..." 
+            className="pl-10" 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+          />
+        </div>
+      </div>
+      <div className="grid gap-4">
+        {filtered.map((r) => (
+          <Card key={r.path} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg ${getTypeColor(r.type)} flex items-center justify-center text-white`}>
+                    {getTypeIcon(r.type)}
+                  </div>
+                  <CardTitle className="text-lg">{r.name}</CardTitle>
+                </div>
+                <Badge variant="outline">{r.type}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{r.path}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function GlobalSearch() {
   const [query, setQuery] = useState("")
   return (
@@ -290,6 +340,7 @@ export default function MissionControl() {
   const [activities, setActivities] = useState<ActivityItem[]>(defaultActivities)
   const [events, setEvents] = useState<CalendarEvent[]>(defaultEvents)
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultPortfolio)
+  const [reports] = useState<ReportFile[]>(defaultReports)
   const [lastSync, setLastSync] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -354,12 +405,13 @@ export default function MissionControl() {
       </header>
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="brief" className="space-y-4">
-          <TabsList className="grid grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-7 w-full">
             <TabsTrigger value="brief"><Target className="w-4 h-4 mr-2" />Brief</TabsTrigger>
             <TabsTrigger value="tasks"><LayoutDashboard className="w-4 h-4 mr-2" />Tasks</TabsTrigger>
             <TabsTrigger value="calendar"><Calendar className="w-4 h-4 mr-2" />Calendar</TabsTrigger>
             <TabsTrigger value="memory"><Brain className="w-4 h-4 mr-2" />Memory</TabsTrigger>
             <TabsTrigger value="portfolio"><Wallet className="w-4 h-4 mr-2" />Portfolio</TabsTrigger>
+            <TabsTrigger value="reports"><FileText className="w-4 h-4 mr-2" />Reports</TabsTrigger>
             <TabsTrigger value="search"><Search className="w-4 h-4 mr-2" />Search</TabsTrigger>
           </TabsList>
           <TabsContent value="brief"><DailyBriefView tasks={tasks} events={events} activities={activities} portfolio={portfolio} /></TabsContent>
@@ -367,6 +419,7 @@ export default function MissionControl() {
           <TabsContent value="calendar"><CalendarView events={events} /></TabsContent>
           <TabsContent value="memory"><MemoryLibrary memories={memories} /></TabsContent>
           <TabsContent value="portfolio"><PortfolioView portfolio={portfolio} /></TabsContent>
+          <TabsContent value="reports"><ReportsView reports={reports} /></TabsContent>
           <TabsContent value="search"><GlobalSearch /></TabsContent>
         </Tabs>
       </main>
