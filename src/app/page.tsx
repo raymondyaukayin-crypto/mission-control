@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, ExternalLink } from "lucide-react"
+import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, ExternalLink, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 
 interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
