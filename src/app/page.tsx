@@ -15,29 +15,29 @@ interface CalendarEvent { id: string; title: string; startDate: string; type: "t
 interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number }
 
 const defaultTasks: Task[] = [
-  { id: "1", title: "Research Bitcoin", description: "Analyze BTC market", status: "done", priority: "high", owner: "OpenClaw", category: "Investment", createdAt: "2026-02-25T10:00:00Z", updatedAt: "2026-02-25T14:58:00Z" },
-  { id: "2", title: "FIRE Review", description: "Weekly portfolio review", status: "in_progress", priority: "medium", owner: "OpenClaw", category: "Investment", createdAt: "2026-02-25T09:00:00Z", updatedAt: "2026-02-25T09:00:00Z" },
-  { id: "3", title: "Baby Checklist", description: "Newborn essentials", status: "todo", priority: "high", owner: "Raymond", category: "Family", createdAt: "2026-02-24T12:00:00Z", updatedAt: "2026-02-24T12:00:00Z" },
+  { id: "1", title: "研究比特幣投資機會", description: "分析比特幣市場", status: "done", priority: "high", owner: "OpenClaw", category: "投資", createdAt: "2026-02-25T10:00:00Z", updatedAt: "2026-02-25T14:58:00Z" },
+  { id: "2", title: "FIRE組合review", description: "每週檢視投資組合表現", status: "in_progress", priority: "medium", owner: "OpenClaw", category: "投資", createdAt: "2026-02-25T09:00:00Z", updatedAt: "2026-02-25T09:00:00Z" },
+  { id: "3", title: "寶寶用品清單", description: "整理初生嬰兒所需物品", status: "todo", priority: "high", owner: "Raymond", category: "家庭", createdAt: "2026-02-24T12:00:00Z", updatedAt: "2026-02-24T12:00:00Z" },
 ]
 
 const defaultMemories: Memory[] = [
-  { id: "1", title: "Bitcoin Analysis Done", content: "Complete BTC research, suggest 3-5% allocation", category: "Investment", tags: ["BTC", "Crypto"], createdAt: "2026-02-25T14:58:00Z" },
-  { id: "2", title: "Mission Control Launch", content: "Built Mission Control Dashboard", category: "System", tags: ["System", "Automation"], createdAt: "2026-02-25T12:00:00Z" },
+  { id: "1", title: "比特幣投資分析完成", content: "完成比特幣投資機會研究，報告已存檔。建議配置3-5%資產", category: "投資", tags: ["BTC", "Crypto"], createdAt: "2026-02-25T14:58:00Z" },
+  { id: "2", title: "Mission Control系統建立", content: "建立Mission Control儀表板", category: "系統", tags: ["系統", "Automation"], createdAt: "2026-02-25T12:00:00Z" },
 ]
 
 const defaultActivities: ActivityItem[] = [
-  { id: "1", action: "Task Done", details: "Bitcoin report completed", type: "task", timestamp: "2026-02-25T14:58:00Z" },
-  { id: "2", action: "Memory Added", details: "Recorded BTC conclusions", type: "memory", timestamp: "2026-02-25T14:55:00Z" },
-  { id: "3", action: "System Built", details: "Created Mission Control", type: "system", timestamp: "2026-02-25T12:00:00Z" },
+  { id: "1", action: "完成任務", details: "比特幣投資研究報告已完成並存檔", type: "task", timestamp: "2026-02-25T14:58:00Z" },
+  { id: "2", action: "新增記憶", details: "記錄比特幣投資分析結論", type: "memory", timestamp: "2026-02-25T14:55:00Z" },
+  { id: "3", action: "系統 Built", details: "創建Mission Control儀表板", type: "system", timestamp: "2026-02-25T12:00:00Z" },
 ]
 
 const defaultEvents: CalendarEvent[] = [
-  { id: "1", title: "Weekly Portfolio Review", startDate: "2026-02-28T09:00:00Z", type: "task" },
-  { id: "2", title: "BTC Price Check", startDate: "2026-02-26T08:00:00Z", type: "reminder" },
+  { id: "1", title: "每週投資組合review", startDate: "2026-02-28T09:00:00Z", type: "task" },
+  { id: "2", title: "比特幣價格檢查", startDate: "2026-02-26T08:00:00Z", type: "reminder" },
 ]
 
 const defaultPortfolio: PortfolioItem[] = [
-  { id: "1", name: "Bitcoin", symbol: "BTC", type: "crypto", value: 50000, change24h: 2.5, allocation: 25 },
+  { id: "1", name: "比特幣", symbol: "BTC", type: "crypto", value: 50000, change24h: 2.5, allocation: 25 },
   { id: "2", name: "Alibaba", symbol: "9988.HK", type: "stock", value: 30000, change24h: -1.2, allocation: 15 },
   { id: "3", name: "CMB", symbol: "0941.HK", type: "stock", value: 40000, change24h: 0.5, allocation: 20 },
   { id: "4", name: "iShares BTC ETF", symbol: "IBIT", type: "stock", value: 20000, change24h: 1.8, allocation: 10 },
@@ -69,7 +69,7 @@ function exportData(data: any) {
 function TaskBoard({ tasks, onStatusChange }: { tasks: Task[], onStatusChange: (id: string, status: Task["status"]) => void }) {
   const [draggedTask, setDraggedTask] = useState<string | null>(null)
   const columns = [
-    { id: "todo", title: "To Do", color: "bg-gray-100 dark:bg-gray-800" },
+    { id: "todo", title: "待完成", color: "bg-gray-100 dark:bg-gray-800" },
     { id: "in_progress", title: "In Progress", color: "bg-blue-100 dark:bg-blue-900" },
     { id: "done", title: "Done", color: "bg-green-100 dark:bg-green-900" }
   ]
@@ -140,7 +140,7 @@ function MemoryLibrary({ memories }: { memories: Memory[] }) {
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search memories..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="搜尋記憶..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
       <div className="grid gap-4">
@@ -203,13 +203,13 @@ function PortfolioView({ portfolio }: { portfolio: PortfolioItem[] }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardHeader className="pb-2"><CardDescription>Total Assets</CardDescription><CardTitle className="text-2xl">${total.toLocaleString()}</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>24h Change</CardDescription><CardTitle className={`text-2xl ${getChangeColor(change)}`}>{change >= 0 ? "+" : ""}${change.toLocaleString()} ({changePercent.toFixed(2)}%)</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Holdings</CardDescription><CardTitle className="text-2xl">{portfolio.length}</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Cash Level</CardDescription><CardTitle className="text-2xl">{portfolio.find(p => p.type === 'cash')?.allocation || 0}%</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>總資產</CardDescription><CardTitle className="text-2xl">${total.toLocaleString()}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>24小時變動</CardDescription><CardTitle className={`text-2xl ${getChangeColor(change)}`}>{change >= 0 ? "+" : ""}${change.toLocaleString()} ({changePercent.toFixed(2)}%)</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>持倉數量</CardDescription><CardTitle className="text-2xl">{portfolio.length}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>現金水平</CardDescription><CardTitle className="text-2xl">{portfolio.find(p => p.type === 'cash')?.allocation || 0}%</CardTitle></CardHeader></Card>
       </div>
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" />Holdings</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" />持倉數量</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-4">
             {portfolio.map((item) => (
@@ -236,25 +236,25 @@ function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h2 className="text-2xl font-bold">Daily Brief</h2><p className="text-muted-foreground">{format(new Date(), 'yyyy-MM-dd')}</p></div>
+        <div><h2 className="text-2xl font-bold">每日簡報</h2><p className="text-muted-foreground">{format(new Date(), 'yyyy-MM-dd')}</p></div>
         <Button onClick={() => exportData({ tasks, memories: [], activities, events, portfolio })}><Download className="w-4 h-4 mr-2" />Export</Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Target className="w-5 h-5" />Tasks Today</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-bold">{tasks.filter(t => t.status === 'todo').length}</div><p className="text-blue-100">To Do</p></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Target className="w-5 h-5" />今日任務</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold">{tasks.filter(t => t.status === 'todo').length}</div><p className="text-blue-100">待完成</p></CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Calendar className="w-5 h-5" />Schedule</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Calendar className="w-5 h-5" />日程</CardTitle></CardHeader>
           <CardContent><div className="text-3xl font-bold">{events.filter(e => format(new Date(e.startDate), 'yyyy-MM-dd') === today).length}</div><p className="text-purple-100">Events</p></CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Wallet className="w-5 h-5" />Total Assets</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Wallet className="w-5 h-5" />總資產</CardTitle></CardHeader>
           <CardContent><div className="text-3xl font-bold">${total.toLocaleString()}</div><p className="text-green-100">HKD</p></CardContent>
         </Card>
       </div>
       <Card>
-        <CardHeader><CardTitle>Recent Activities</CardTitle></CardHeader>
+        <CardHeader><CardTitle>最近活動</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
             {activities.slice(0, 5).map((a) => (
@@ -277,7 +277,7 @@ function GlobalSearch() {
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input placeholder="Search tasks, memories, activities..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input placeholder="搜尋任務、記憶、活動..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
       {query && <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Searching for "{query}"...</p></CardContent></Card>}
     </div>
