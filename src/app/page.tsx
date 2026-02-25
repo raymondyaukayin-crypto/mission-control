@@ -436,28 +436,6 @@ export default function MissionControl() {
     setShowAddTask(false)
   }
 
-  // Export tasks to active-tasks.md format
-  const exportToWorkspace = () => {
-    const todoTasks = tasks.filter(t => t.status === "todo")
-    let markdown = "# Active Tasks - 從 Mission Control 匯出\n\n"
-    markdown += "## 待辨事項\n\n"
-    markdown += "| Owner | 狀態 | 目標 | 下一步 | 預期產出 |\n"
-    markdown += "|-------|------|------|--------|----------|\n"
-    
-    todoTasks.forEach(t => {
-      const status = t.status === "todo" ? "📋 待辦" : t.status === "in_progress" ? "🔄 進行中" : "✅ 完成"
-      markdown += `| ${t.owner} | ${status} | ${t.title} | [ ] ${t.description} | - |\n`
-    })
-    
-    markdown += "\n---\n"
-    markdown += `_匯出時間：${new Date().toLocaleString('zh-HK')}_\n`
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(markdown).then(() => {
-      alert("已複製到剪貼簿！可以貼上到 active-tasks.md")
-    })
-  }
-
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -491,7 +469,6 @@ export default function MissionControl() {
               <input type="file" ref={fileInputRef} accept=".json" style={{ display: 'none' }} id="import-file" onChange={handleImport} />
               <label htmlFor="import-file"><Button variant="outline" size="sm" asChild><span><Upload className="w-4 h-4 mr-2" />Import</span></Button></label>
               <Button variant="outline" size="sm" onClick={() => exportData({ tasks, memories, activities, events, portfolio })}><Download className="w-4 h-4 mr-2" />Export</Button>
-              <Button variant="outline" size="sm" onClick={exportToWorkspace}><Save className="w-4 h-4 mr-2" />Sync</Button>
               <Button variant="outline" size="sm" onClick={handleSave}><Save className="w-4 h-4 mr-2" />Save</Button>
             </div>
           </div>
