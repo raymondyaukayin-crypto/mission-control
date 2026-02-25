@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 
@@ -373,6 +374,8 @@ export default function MissionControl() {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultPortfolio)
   const [reports] = useState<ReportFile[]>(defaultReports)
   const [lastSync, setLastSync] = useState("")
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as "low" | "medium" | "high", category: "投資", owner: "Raymond" as "OpenClaw" | "Raymond" | "Both" })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -394,6 +397,24 @@ export default function MissionControl() {
 
   const handleStatusChange = (id: string, status: Task["status"]) => {
     setTasks(tasks.map(t => t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t))
+  }
+
+  const handleAddTask = () => {
+    if (!newTask.title.trim()) return
+    const task: Task = {
+      id: Date.now().toString(),
+      title: newTask.title,
+      description: newTask.description,
+      status: "todo",
+      priority: newTask.priority,
+      owner: newTask.owner,
+      category: newTask.category,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    setTasks([...tasks, task])
+    setNewTask({ title: "", description: "", priority: "medium", category: "投資", owner: "Raymond" })
+    setShowAddTask(false)
   }
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -446,7 +467,49 @@ export default function MissionControl() {
             <TabsTrigger value="search"><Search className="w-4 h-4 mr-2" />Search</TabsTrigger>
           </TabsList>
           <TabsContent value="brief"><DailyBriefView tasks={tasks} events={events} activities={activities} portfolio={portfolio} /></TabsContent>
-          <TabsContent value="tasks"><TaskBoard tasks={tasks} onStatusChange={handleStatusChange} /></TabsContent>
+          <TabsContent value="tasks">
+            <div className="space-y-4">
+              {/* Add Task Button / Form */}
+              {!showAddTask ? (
+                <Button onClick={() => setShowAddTask(true)} className="w-full">
+                  <Target className="w-4 h-4 mr-2" />新增任務
+                </Button>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>新增任務</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input placeholder="任務標題" value={newTask.title} onChange={(e) => setNewTask({...newTask, title: e.target.value})} />
+                    <Input placeholder="任務描述" value={newTask.description} onChange={(e) => setNewTask({...newTask, description: e.target.value})} />
+                    <div className="flex gap-2">
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" value={newTask.priority} onChange={(e) => setNewTask({...newTask, priority: e.target.value as any})}>
+                        <option value="low">低優先</option>
+                        <option value="medium">中優先</option>
+                        <option value="high">高優先</option>
+                      </select>
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" value={newTask.category} onChange={(e) => setNewTask({...newTask, category: e.target.value})}>
+                        <option value="投資">投資</option>
+                        <option value="家庭">家庭</option>
+                        <option value="工作">工作</option>
+                        <option value="系統">系統</option>
+                      </select>
+                      <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" value={newTask.owner} onChange={(e) => setNewTask({...newTask, owner: e.target.value as any})}>
+                        <option value="Raymond">Raymond</option>
+                        <option value="OpenClaw">OpenClaw</option>
+                        <option value="Both">Both</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleAddTask}>確認新增</Button>
+                      <Button variant="outline" onClick={() => setShowAddTask(false)}>取消</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <TaskBoard tasks={tasks} onStatusChange={handleStatusChange} />
+            </div>
+          </TabsContent>
           <TabsContent value="calendar"><CalendarView events={events} /></TabsContent>
           <TabsContent value="memory"><MemoryLibrary memories={memories} /></TabsContent>
           <TabsContent value="portfolio"><PortfolioView portfolio={portfolio} /></TabsContent>
