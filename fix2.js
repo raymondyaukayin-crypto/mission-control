@@ -1,0 +1,36 @@
+const fs = require('fs');
+let c = fs.readFileSync('./src/app/page.tsx', 'utf8');
+
+c = c.replace(/>Brief</g, '>簡報<');
+c = c.replace(/>Tasks</g, '>任務<');
+c = c.replace(/>Calendar</g, '>行事曆<');
+c = c.replace(/>Memory</g, '>記憶<');
+c = c.replace(/>Portfolio</g, '>組合<');
+c = c.replace(/>Search</g, '>搜尋<');
+c = c.replace(/>To Do</g, '>待辦<');
+c = c.replace(/>In Progress</g, '>進行中<');
+c = c.replace(/>Done</g, '>已完成<');
+c = c.replace(/title: "To Do"/g, 'title: "待辦"');
+c = c.replace(/title: "In Progress"/g, 'title: "進行中"');
+c = c.replace(/title: "Done"/g, 'title: "已完成"');
+c = c.replace(/"todo"/g, '"待辦"');
+c = c.replace(/"in_progress"/g, '"進行中"');
+c = c.replace(/"done"/g, '"已完成"');
+c = c.replace(/OpenClaw/g, 'Melo');
+c = c.replace(/"low"/g, '"低"');
+c = c.replace(/"medium"/g, '"中"');
+c = c.replace(/"high"/g, '"高"');
+c = c.replace(/"stock"/g, '"股票"');
+c = c.replace(/"crypto"/g, '"加密"');
+c = c.replace(/"bond"/g, '"債券"');
+c = c.replace(/"cash"/g, '"現金"');
+c = c.replace(/"task"/g, '"任務"');
+c = c.replace(/"meeting"/g, '"會議"');
+c = c.replace(/"reminder"/g, '"提醒"');
+c = c.replace(/"system"/g, '"系統"');
+c = c.replace(/"search"/g, '"搜尋"');
+c = c.replace(/"memory"/g, '"記憶"');
+c = c.replace(/"in_progress"/g, '"進行中"');
+
+fs.writeFileSync('./src/app/page.tsx', c, 'utf8');
+console.log('Done!');
