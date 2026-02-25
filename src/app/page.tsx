@@ -280,18 +280,37 @@ function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[
   )
 }
 
-function ReportsView({ reports }: { reports: ReportFile[] }) {
+function ReportsView({ reports: initialReports }: { reports: ReportFile[] }) {
   const [search, setSearch] = useState("")
   const [selectedReport, setSelectedReport] = useState<ReportFile | null>(null)
-  const filtered = reports.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
+  const [reportContents, setReportContents] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(true)
+
+  // Fetch report contents on mount
+  useEffect(() => {
+    fetch('/reports-data.json')
+      .then(res => res.json())
+      .then(data => {
+        const contents: Record<string, string> = {}
+        data.forEach((r: any) => {
+          contents[r.path] = r.content
+        })
+        setReportContents(contents)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
+  const filtered = initialReports.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
   const getTypeIcon = (t: string) => t === "report" ? <FileText className="w-4 h-4" /> : t === "data" ? <FolderOpen className="w-4 h-4" /> : <Brain className="w-4 h-4" />
   const getTypeColor = (t: string) => t === "report" ? "bg-blue-500" : t === "data" ? "bg-green-500" : "bg-purple-500"
 
-  // Sample content for preview (in real app, would fetch from API)
+  // Get actual content from fetched data
   const getPreviewContent = (r: ReportFile) => {
-    if (r.type === "report") return "📊 投資報告內容預覽...\n\n[Click to view full content]"
-    if (r.type === "data") return "📁 數據文件內容預覽...\n\n[Click to view full content]"
-    return "🧠 記憶內容預覽...\n\n[Click to view full content]"
+    if (loading) return "載入中..."
+    const content = reportContents[r.path]
+    if (!content) return "無內容"
+    return content
   }
 
   return (
