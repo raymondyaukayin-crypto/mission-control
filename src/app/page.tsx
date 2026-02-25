@@ -1,269 +1,93 @@
 "use client"
-
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Brain, 
-  Activity, 
-  Search,
-  Moon,
-  Sun,
-  Plus,
-  MoreVertical,
-  Clock,
-  Tag,
-  Filter,
-  RefreshCw,
-  Save,
-  Loader2
-} from "lucide-react"
+import { LayoutDashboard, Calendar, Brain, Activity, Search, Moon, Sun, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 
-// Types
-interface Task {
-  id: string
-  title: string
-  description: string
-  status: "todo" | "in_progress" | "done"
-  priority: "low" | "medium" | "high"
-  owner: "OpenClaw" | "Raymond" | "Both"
-  category: string
-  createdAt: string
-  updatedAt: string
-}
+interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
+interface Memory { id: string; title: string; content: string; category: string; tags: string[]; createdAt: string }
+interface ActivityItem { id: string; action: string; details: string; type: "task" | "memory" | "system" | "search"; timestamp: string }
+interface CalendarEvent { id: string; title: string; startDate: string; type: "task" | "meeting" | "reminder" }
+interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number }
 
-interface Memory {
-  id: string
-  title: string
-  content: string
-  category: string
-  tags: string[]
-  createdAt: string
-}
-
-interface Activity {
-  id: string
-  action: string
-  details: string
-  type: "task" | "memory" | "system" | "search"
-  timestamp: string
-}
-
-interface CalendarEvent {
-  id: string
-  title: string
-  description: string
-  startDate: string
-  endDate: string
-  type: "task" | "meeting" | "reminder"
-  priority: "low" | "medium" | "high"
-}
-
-// Demo data (fallback)
-const demoTasks: Task[] = [
-  {
-    id: "1",
-    title: "研究比特幣投資機會",
-    description: "分析比特幣市場，撰寫投資建議報告",
-    status: "done",
-    priority: "high",
-    owner: "OpenClaw",
-    category: "投資",
-    createdAt: "2026-02-25T10:00:00Z",
-    updatedAt: "2026-02-25T14:58:00Z"
-  },
-  {
-    id: "2",
-    title: "FIRE 組合 review",
-    description: "每週檢視投資組合表現",
-    status: "in_progress",
-    priority: "medium",
-    owner: "OpenClaw",
-    category: "投資",
-    createdAt: "2026-02-25T09:00:00Z",
-    updatedAt: "2026-02-25T09:00:00Z"
-  },
-  {
-    id: "3",
-    title: "寶寶用品清單",
-    description: "整理初生嬰兒所需物品",
-    status: "todo",
-    priority: "high",
-    owner: "Raymond",
-    category: "家庭",
-    createdAt: "2026-02-24T12:00:00Z",
-    updatedAt: "2026-02-24T12:00:00Z"
-  },
-  {
-    id: "4",
-    title: "設定每日晨報",
-    description: "建立每日自動晨報系統",
-    status: "todo",
-    priority: "medium",
-    owner: "Both",
-    category: "系統",
-    createdAt: "2026-02-25T08:00:00Z",
-    updatedAt: "2026-02-25T08:00:00Z"
-  }
+const defaultTasks: Task[] = [
+  { id: "1", title: "Research Bitcoin", description: "Analyze BTC market", status: "done", priority: "high", owner: "OpenClaw", category: "Investment", createdAt: "2026-02-25T10:00:00Z", updatedAt: "2026-02-25T14:58:00Z" },
+  { id: "2", title: "FIRE Review", description: "Weekly portfolio review", status: "in_progress", priority: "medium", owner: "OpenClaw", category: "Investment", createdAt: "2026-02-25T09:00:00Z", updatedAt: "2026-02-25T09:00:00Z" },
+  { id: "3", title: "Baby Checklist", description: "Newborn essentials", status: "todo", priority: "high", owner: "Raymond", category: "Family", createdAt: "2026-02-24T12:00:00Z", updatedAt: "2026-02-24T12:00:00Z" },
 ]
 
-const demoMemories: Memory[] = [
-  {
-    id: "1",
-    title: "比特幣投資分析完成",
-    content: "完成比特幣投資機會研究，報告已存檔。建議配置3-5%資產，採用定投策略。",
-    category: "投資",
-    tags: ["比特幣", "加密貨幣", "投資建議"],
-    createdAt: "2026-02-25T14:58:00Z"
-  },
-  {
-    id: "2",
-    title: "Mission Control 系統建立",
-    content: "建立 Mission Control 儀表板，整合任務系統、記憶庫、活動紀錄。",
-    category: "系統",
-    tags: ["系統", "自動化", "任務管理"],
-    createdAt: "2026-02-25T12:00:00Z"
-  },
-  {
-    id: "3",
-    title: "偉哥投資哲學整理",
-    content: "從1749篇網誌文章中提取偉哥既投資哲學，包括選股標準、風險管理、IPO評估框架。",
-    category: "投資",
-    tags: ["偉哥", "港股", "投資哲學"],
-    createdAt: "2026-02-25T06:00:00Z"
-  }
+const defaultMemories: Memory[] = [
+  { id: "1", title: "Bitcoin Analysis Done", content: "Complete BTC research, suggest 3-5% allocation", category: "Investment", tags: ["BTC", "Crypto"], createdAt: "2026-02-25T14:58:00Z" },
+  { id: "2", title: "Mission Control Launch", content: "Built Mission Control Dashboard", category: "System", tags: ["System", "Automation"], createdAt: "2026-02-25T12:00:00Z" },
 ]
 
-const demoActivities: Activity[] = [
-  {
-    id: "1",
-    action: "完成任務",
-    details: "比特幣投資研究報告已完成並存檔",
-    type: "task",
-    timestamp: "2026-02-25T14:58:00Z"
-  },
-  {
-    id: "2",
-    action: "新增記憶",
-    details: "記錄比特幣投資分析結論",
-    type: "memory",
-    timestamp: "2026-02-25T14:55:00Z"
-  },
-  {
-    id: "3",
-    action: "建立系統",
-    details: "創建 Mission Control 儀表板",
-    type: "system",
-    timestamp: "2026-02-25T12:00:00Z"
-  },
-  {
-    id: "4",
-    action: "搜索資訊",
-    details: "搜尋比特幣最新價格與市場趨勢",
-    type: "search",
-    timestamp: "2026-02-25T10:30:00Z"
-  }
+const defaultActivities: ActivityItem[] = [
+  { id: "1", action: "Task Done", details: "Bitcoin report completed", type: "task", timestamp: "2026-02-25T14:58:00Z" },
+  { id: "2", action: "Memory Added", details: "Recorded BTC conclusions", type: "memory", timestamp: "2026-02-25T14:55:00Z" },
+  { id: "3", action: "System Built", details: "Created Mission Control", type: "system", timestamp: "2026-02-25T12:00:00Z" },
 ]
 
-const demoEvents: CalendarEvent[] = [
-  {
-    id: "1",
-    title: "每週投資組合 review",
-    description: "檢視本週投資表現",
-    startDate: "2026-02-28T09:00:00Z",
-    endDate: "2026-02-28T10:00:00Z",
-    type: "task",
-    priority: "medium"
-  },
-  {
-    id: "2",
-    title: "比特幣價格檢查",
-    description: "每日比特幣價格監控",
-    startDate: "2026-02-26T08:00:00Z",
-    endDate: "2026-02-26T08:30:00Z",
-    type: "reminder",
-    priority: "low"
-  }
+const defaultEvents: CalendarEvent[] = [
+  { id: "1", title: "Weekly Portfolio Review", startDate: "2026-02-28T09:00:00Z", type: "task" },
+  { id: "2", title: "BTC Price Check", startDate: "2026-02-26T08:00:00Z", type: "reminder" },
 ]
 
-// Task Board Component
-function TaskBoard({ tasks, onStatusChange, onSave }: { tasks: Task[], onStatusChange: (id: string, status: Task["status"]) => void, onSave: () => void }) {
+const defaultPortfolio: PortfolioItem[] = [
+  { id: "1", name: "Bitcoin", symbol: "BTC", type: "crypto", value: 50000, change24h: 2.5, allocation: 25 },
+  { id: "2", name: "Alibaba", symbol: "9988.HK", type: "stock", value: 30000, change24h: -1.2, allocation: 15 },
+  { id: "3", name: "CMB", symbol: "0941.HK", type: "stock", value: 40000, change24h: 0.5, allocation: 20 },
+  { id: "4", name: "iShares BTC ETF", symbol: "IBIT", type: "stock", value: 20000, change24h: 1.8, allocation: 10 },
+  { id: "5", name: "Cash", symbol: "CASH", type: "cash", value: 50000, change24h: 0, allocation: 25 },
+  { id: "6", name: "US Treasury", symbol: "TLT", type: "bond", value: 10000, change24h: 0.2, allocation: 5 },
+]
+
+const STORAGE_KEY = 'mission_control_data'
+
+function loadData() {
+  if (typeof window === 'undefined') return null
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') } catch { return null }
+}
+
+function saveData(data: any) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+}
+
+function exportData(data: any) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `mission-control-${format(new Date(), 'yyyy-MM-dd')}.json`
+  a.click()
+}
+
+function TaskBoard({ tasks, onStatusChange }: { tasks: Task[], onStatusChange: (id: string, status: Task["status"]) => void }) {
   const [draggedTask, setDraggedTask] = useState<string | null>(null)
-  
   const columns = [
     { id: "todo", title: "To Do", color: "bg-gray-100 dark:bg-gray-800" },
     { id: "in_progress", title: "In Progress", color: "bg-blue-100 dark:bg-blue-900" },
     { id: "done", title: "Done", color: "bg-green-100 dark:bg-green-900" }
-  ] as const
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-red-500"
-      case "medium": return "bg-yellow-500"
-      case "low": return "bg-green-500"
-      default: return "bg-gray-500"
-    }
-  }
-
-  const handleDragEnd = (taskId: string, newStatus: Task["status"]) => {
-    onStatusChange(taskId, newStatus)
-    onSave()
-  }
-
+  ]
+  const getPriorityColor = (p: string) => p === "high" ? "bg-red-500" : p === "medium" ? "bg-yellow-500" : "bg-green-500"
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {columns.map((column) => (
-        <div
-          key={column.id}
-          className={`rounded-lg p-4 ${column.color}`}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => {
-            if (draggedTask) {
-              handleDragEnd(draggedTask, column.id as Task["status"])
-              setDraggedTask(null)
-            }
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">{column.title}</h3>
-            <Badge variant="secondary">
-              {tasks.filter(t => t.status === column.id).length}
-            </Badge>
-          </div>
+      {columns.map((col) => (
+        <div key={col.id} className={`rounded-lg p-4 ${col.color}`} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (draggedTask) { onStatusChange(draggedTask, col.id as Task["status"]); setDraggedTask(null) }}}>
+          <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">{col.title}</h3><Badge variant="secondary">{tasks.filter(t => t.status === col.id).length}</Badge></div>
           <div className="space-y-3">
-            {tasks
-              .filter((task) => task.status === column.id)
-              .map((task) => (
-                <Card
-                  key={task.id}
-                  className="cursor-move hover:shadow-md transition-shadow"
-                  draggable
-                  onDragStart={() => setDraggedTask(task.id)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{task.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
-                      </div>
-                      <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">{task.category}</Badge>
-                      <Badge variant={task.owner === "OpenClaw" ? "default" : "secondary"} className="text-xs">
-                        {task.owner}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            {tasks.filter(t => t.status === col.id).map((task) => (
+              <Card key={task.id} className="cursor-move hover:shadow-md" draggable onDragStart={() => setDraggedTask(task.id)}>
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between"><div className="flex-1"><p className="font-medium text-sm">{task.title}</p><p className="text-xs text-muted-foreground mt-1">{task.description}</p></div><div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} /></div>
+                  <div className="flex items-center gap-2 mt-2"><Badge variant="outline" className="text-xs">{task.category}</Badge><Badge variant={task.owner === "OpenClaw" ? "default" : "secondary"} className="text-xs">{task.owner}</Badge></div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       ))}
@@ -271,386 +95,164 @@ function TaskBoard({ tasks, onStatusChange, onSave }: { tasks: Task[], onStatusC
   )
 }
 
-// Calendar Component
 function CalendarView({ events }: { events: CalendarEvent[] }) {
-  const [view, setView] = useState<"day" | "week" | "month">("week")
-  
-  const getEventColor = (type: string) => {
-    switch (type) {
-      case "task": return "bg-blue-500"
-      case "meeting": return "bg-purple-500"
-      case "reminder": return "bg-yellow-500"
-      default: return "bg-gray-500"
-    }
-  }
-
+  const getEventColor = (t: string) => t === "task" ? "bg-blue-500" : t === "meeting" ? "bg-purple-500" : "bg-yellow-500"
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          {(["day", "week", "month"] as const).map((v) => (
-            <Button
-              key={v}
-              variant={view === v ? "default" : "outline"}
-              size="sm"
-              onClick={() => setView(v)}
-            >
-              {v.charAt(0).toUpperCase() + v.slice(1)}
-            </Button>
-          ))}
-        </div>
-        <Button variant="outline" size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Event
-        </Button>
-      </div>
-      <Card>
-        <CardContent className="p-4">
-          <div className="space-y-3">
-            {events.map((event) => (
-              <div
-                key={event.id}
-                className={`flex items-center gap-3 p-3 rounded-lg ${getEventColor(event.type)}/10`}
-              >
-                <div className={`w-1 h-12 rounded ${getEventColor(event.type)}`} />
-                <div className="flex-1">
-                  <p className="font-medium">{event.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(event.startDate), "MMM d, h:mm a")}
-                  </p>
-                </div>
-                <Badge variant="outline">{event.type}</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <Card><CardContent className="p-4"><div className="space-y-3">
+        {events.map((e) => (<div key={e.id} className={`flex items-center gap-3 p-3 rounded-lg ${getEventColor(e.type)}/10`}><div className={`w-1 h-12 rounded ${getEventColor(e.type)}`} /><div className="flex-1"><p className="font-medium">{e.title}</p><p className="text-xs text-muted-foreground">{format(new Date(e.startDate), "MMM d, h:mm a")}</p></div><Badge variant="outline">{e.type}</Badge></div>))}
+      </div></CardContent></Card>
     </div>
   )
 }
 
-// Memory Component
 function MemoryLibrary({ memories }: { memories: Memory[] }) {
   const [search, setSearch] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  
-  const categories = ["all", ...Array.from(new Set(memories.map(m => m.category)))]
-  
-  const filteredMemories = memories.filter(m => {
-    const matchesSearch = m.title.toLowerCase().includes(search.toLowerCase()) ||
-                         m.content.toLowerCase().includes(search.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || m.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
-
+  const filtered = memories.filter(m => search === "" || m.title.toLowerCase().includes(search.toLowerCase()) || m.content.toLowerCase().includes(search.toLowerCase()))
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="搜尋記憶..."
-            className="pl-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="分類" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat === "all" ? "全部" : cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid gap-4">
-        {filteredMemories.map((memory) => (
-          <Card key={memory.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{memory.title}</CardTitle>
-                <Badge variant="outline">{memory.category}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{memory.content}</p>
-              <div className="flex gap-2 mt-3">
-                {memory.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-3">
-                {format(new Date(memory.createdAt), "yyyy-MM-dd HH:mm")}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <div className="flex gap-2"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search memories..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} /></div></div>
+      <div className="grid gap-4">{filtered.map((m) => (<Card key={m.id}><CardHeader className="pb-2"><div className="flex items-center justify-between"><CardTitle className="text-lg">{m.title}</CardTitle><Badge variant="outline">{m.category}</Badge></div></CardHeader><CardContent><p className="text-sm text-muted-foreground">{m.content}</p><div className="flex gap-2 mt-3">{m.tags.map((t) => (<Badge key={t} variant="secondary" className="text-xs">{t}</Badge>))}</div></CardContent></Card>))}</div>
     </div>
   )
 }
 
-// Activity Feed Component
-function ActivityFeed({ activities }: { activities: Activity[] }) {
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "task": return <LayoutDashboard className="w-4 h-4" />
-      case "memory": return <Brain className="w-4 h-4" />
-      case "system": return <Activity className="w-4 h-4" />
-      case "search": return <Search className="w-4 h-4" />
-      default: return <Activity className="w-4 h-4" />
-    }
-  }
-
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case "task": return "bg-blue-500"
-      case "memory": return "bg-purple-500"
-      case "system": return "bg-green-500"
-      case "search": return "bg-yellow-500"
-      default: return "bg-gray-500"
-    }
-  }
-
+function ActivityFeed({ activities }: { activities: ActivityItem[] }) {
+  const getColor = (t: string) => t === "task" ? "bg-blue-500" : t === "memory" ? "bg-purple-500" : t === "system" ? "bg-green-500" : "bg-yellow-500"
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Input placeholder="篩選活動..." className="flex-1" />
-        <Button variant="outline" size="icon">
-          <Filter className="w-4 h-4" />
-        </Button>
+    <div className="space-y-4"><div className="relative"><div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" /><div className="space-y-6">{activities.map((a, i) => (<div key={a.id} className="flex gap-4" style={{ animationDelay: `${i * 0.1}s` }}><div className={`z-10 w-8 h-8 rounded-full ${getColor(a.type)} flex items-center justify-center text-white`}><Activity className="w-4 h-4" /></div><Card className="flex-1"><CardContent className="p-3"><div className="flex items-center justify-between"><p className="font-medium">{a.action}</p><span className="text-xs text-muted-foreground">{format(new Date(a.timestamp), "HH:mm")}</span></div><p className="text-sm text-muted-foreground mt-1">{a.details}</p></CardContent></Card></div></div>))}</div></div></div>
+  )
+}
+
+function PortfolioView({ portfolio }: { portfolio: PortfolioItem[] }) {
+  const total = portfolio.reduce((s, i) => s + i.value, 0)
+  const change = portfolio.reduce((s, i) => s + (i.value * i.change24h / 100), 0)
+  const changePercent = (change / total) * 100
+  const getTypeIcon = (t: string) => t === "crypto" ? <DollarSign className="w-4 h-4" /> : t === "bond" ? <PieChart className="w-4 h-4" /> : t === "cash" ? <Wallet className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />
+  const getChangeColor = (c: number) => c > 0 ? "text-green-500" : c < 0 ? "text-red-500" : "text-gray-500"
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card><CardHeader className="pb-2"><CardDescription>Total Assets</CardDescription><CardTitle className="text-2xl">${total.toLocaleString()}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>24h Change</CardDescription><CardTitle className={`text-2xl ${getChangeColor(change)}`}>{change >= 0 ? "+" : ""}${change.toLocaleString()} ({changePercent.toFixed(2)}%)</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>Holdings</CardDescription><CardTitle className="text-2xl">{portfolio.length}</CardTitle></CardHeader></Card>
+        <Card><CardHeader className="pb-2"><CardDescription>Cash Level</CardDescription><CardTitle className="text-2xl">{portfolio.find(p => p.type === 'cash')?.allocation || 0}%</CardTitle></CardHeader></Card>
       </div>
-      <div className="relative">
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-        <div className="space-y-6">
-          {activities.map((activity, index) => (
-            <div key={activity.id} className="flex gap-4 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className={`relative z-10 w-8 h-8 rounded-full ${getActivityColor(activity.type)} flex items-center justify-center text-white`}>
-                {getActivityIcon(activity.type)}
-              </div>
-              <Card className="flex-1">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium">{activity.action}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(activity.timestamp), "HH:mm")}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{activity.details}</p>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Card><CardHeader><CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" />Holdings</CardTitle></CardHeader><CardContent><div className="space-y-4">{portfolio.map((item) => (<div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">{getTypeIcon(item.type)}</div><div><p className="font-medium">{item.name}</p><p className="text-xs text-muted-foreground">{item.symbol}</p></div></div><div className="text-right"><p className="font-medium">${item.value.toLocaleString()}</p><p className={`text-xs ${getChangeColor(item.change24h)}`}>{item.change24h >= 0 ? "+" : ""}{item.change24h}%</p></div><div className="text-right"><p className="text-sm text-muted-foreground">{item.allocation}%</p><div className="w-20 h-2 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary" style={{ width: `${item.allocation}%` }} /></div></div></div>))}</div></CardContent></Card>
     </div>
   )
 }
 
-// Global Search Component
+function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[], events: CalendarEvent[], activities: ActivityItem[], portfolio: PortfolioItem[] }) {
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const total = portfolio.reduce((s, i) => s + i.value, 0)
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between"><div><h2 className="text-2xl font-bold">Daily Brief</h2><p className="text-muted-foreground">{format(new Date(), 'yyyy-MM-dd')}</p></div><Button onClick={() => exportData({ tasks, memories: [], activities, events, portfolio })}><Download className="w-4 h-4 mr-2" />Export</Button></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Target className="w-5 h-5" />Tasks Today</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{tasks.filter(t => t.status === 'todo').length}</div><p className="text-blue-100">To Do</p></CardContent></Card>
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Calendar className="w-5 h-5" />Schedule</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{events.filter(e => format(new Date(e.startDate), 'yyyy-MM-dd') === today).length}</div><p className="text-purple-100">Events</p></CardContent></Card>
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Wallet className="w-5 h-5" />Total Assets</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">${total.toLocaleString()}</div><p className="text-green-100">HKD</p></CardContent></Card>
+      </div>
+      <Card><CardHeader><CardTitle>Recent Activities</CardTitle></CardHeader><CardContent><div className="space-y-3">{activities.slice(0, 5).map((a) => (<div key={a.id} className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-muted-foreground" /><div className="flex-1"><p className="font-medium">{a.action}</p><p className="text-sm text-muted-foreground">{a.details}</p></div><span className="text-xs text-muted-foreground">{format(new Date(a.timestamp), 'HH:mm')}</span></div>))}</div></CardContent></Card>
+    </div>
+  )
+}
+
 function GlobalSearch() {
   const [query, setQuery] = useState("")
-  
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input
-          placeholder="搜尋任務、記憶、活動..."
-          className="pl-12 text-lg h-14"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-      {query && (
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">
-              輸入「{query}」進行搜尋...
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" /><Input placeholder="Search tasks, memories, activities..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+      {query && <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Searching for "{query}"...</p></CardContent></Card>}
     </div>
   )
 }
 
-// Main Page Component
 export default function MissionControl() {
-  const [tasks, setTasks] = useState<Task[]>(demoTasks)
-  const [memories, setMemories] = useState<Memory[]>(demoMemories)
-  const [activities, setActivities] = useState<Activity[]>(demoActivities)
-  const [events, setEvents] = useState<CalendarEvent[]>(demoEvents)
-  const [theme, setTheme] = useState<"light" | "dark">("dark")
-  const [isSaving, setIsSaving] = useState(false)
-  const [lastSync, setLastSync] = useState<string>("")
+  const [tasks, setTasks] = useState<Task[]>(defaultTasks)
+  const [memories, setMemories] = useState<Memory[]>(defaultMemories)
+  const [activities, setActivities] = useState<ActivityItem[]>(defaultActivities)
+  const [events, setEvents] = useState<CalendarEvent[]>(defaultEvents)
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultPortfolio)
+  const [lastSync, setLastSync] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Load data from API
-  const loadData = useCallback(async () => {
-    try {
-      const [tasksRes, memoriesRes, activitiesRes, eventsRes] = await Promise.all([
-        fetch('/api/data?type=tasks'),
-        fetch('/api/data?type=memories'),
-        fetch('/api/data?type=activities'),
-        fetch('/api/data?type=events')
-      ])
-
-      const [tasksData, memoriesData, activitiesData, eventsData] = await Promise.all([
-        tasksRes.json(),
-        memoriesRes.json(),
-        activitiesRes.json(),
-        eventsRes.json()
-      ])
-
-      if (tasksData.length > 0) setTasks(tasksData)
-      if (memoriesData.length > 0) setMemories(memoriesData)
-      if (activitiesData.length > 0) setActivities(activitiesData)
-      if (eventsData.length > 0) setEvents(eventsData)
-
-      setLastSync(new Date().toLocaleTimeString())
-    } catch (e) {
-      console.error('Failed to load data:', e)
+  useEffect(() => {
+    const saved = loadData()
+    if (saved) {
+      if (saved.tasks) setTasks(saved.tasks)
+      if (saved.memories) setMemories(saved.memories)
+      if (saved.activities) setActivities(saved.activities)
+      if (saved.events) setEvents(saved.events)
+      if (saved.portfolio) setPortfolio(saved.portfolio)
     }
+    setLastSync(new Date().toLocaleTimeString())
   }, [])
 
-  // Initial load
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  // Save data to API
-  const saveData = async (type: string, data: any) => {
-    setIsSaving(true)
-    try {
-      await fetch(`/api/data?type=${type}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-    } catch (e) {
-      console.error('Failed to save:', e)
-    }
-    setIsSaving(false)
-  }
-
-  const handleStatusChange = (taskId: string, newStatus: Task["status"]) => {
-    setTasks(tasks.map(t => 
-      t.id === taskId 
-        ? { ...t, status: newStatus, updatedAt: new Date().toISOString() }
-        : t
-    ))
-  }
-
   const handleSave = () => {
-    saveData('tasks', tasks)
+    saveData({ tasks, memories, activities, events, portfolio })
+    setLastSync(new Date().toLocaleTimeString())
   }
 
-  const handleSync = () => {
-    loadData()
+  const handleStatusChange = (id: string, status: Task["status"]) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t))
+  }
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target?.result as string)
+          if (data.tasks) setTasks(data.tasks)
+          if (data.memories) setMemories(data.memories)
+          if (data.activities) setActivities(data.activities)
+          if (data.events) setEvents(data.events)
+          if (data.portfolio) setPortfolio(data.portfolio)
+          setLastSync(new Date().toLocaleTimeString())
+        } catch {}
+      }
+      reader.readAsText(file)
+    }
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-white font-bold">M</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Mission Control</h1>
-                <p className="text-xs text-muted-foreground">Raymond's Personal Dashboard</p>
-              </div>
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center"><span className="text-white font-bold">M</span></div>
+              <div><h1 className="text-xl font-bold">Mission Control</h1><p className="text-xs text-muted-foreground">Raymond's Personal Dashboard</p></div>
             </div>
             <div className="flex items-center gap-2">
-              {lastSync && (
-                <span className="text-xs text-muted-foreground mr-2">
-                  同步: {lastSync}
-                </span>
-              )}
-              <Button variant="outline" size="sm" onClick={handleSync}>
-                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                同步
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              >
-                {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-              </Button>
+              {lastSync && <span className="text-xs text-muted-foreground mr-2">Sync: {lastSync}</span>}
+              <input type="file" ref={fileInputRef} accept=".json" style={{ display: 'none' }} id="import-file" onChange={handleImport} />
+              <label htmlFor="import-file"><Button variant="outline" size="sm" asChild><span><Upload className="w-4 h-4 mr-2" />Import</span></Button></label>
+              <Button variant="outline" size="sm" onClick={() => exportData({ tasks, memories, activities, events, portfolio })}><Download className="w-4 h-4 mr-2" />Export</Button>
+              <Button variant="outline" size="sm" onClick={handleSave}><Save className="w-4 h-4 mr-2" />Save</Button>
             </div>
           </div>
         </div>
       </header>
-
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="tasks" className="space-y-4">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="tasks" className="gap-2">
-              <LayoutDashboard className="w-4 h-4" />
-              任務板
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-2">
-              <Calendar className="w-4 h-4" />
-              行事曆
-            </TabsTrigger>
-            <TabsTrigger value="memory" className="gap-2">
-              <Brain className="w-4 h-4" />
-              記憶庫
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="gap-2">
-              <Activity className="w-4 h-4" />
-              活動紀錄
-            </TabsTrigger>
-            <TabsTrigger value="search" className="gap-2">
-              <Search className="w-4 h-4" />
-              全域搜尋
-            </TabsTrigger>
+        <Tabs defaultValue="brief" className="space-y-4">
+          <TabsList className="grid grid-cols-6 w-full">
+            <TabsTrigger value="brief"><Target className="w-4 h-4 mr-2" />Brief</TabsTrigger>
+            <TabsTrigger value="tasks"><LayoutDashboard className="w-4 h-4 mr-2" />Tasks</TabsTrigger>
+            <TabsTrigger value="calendar"><Calendar className="w-4 h-4 mr-2" />Calendar</TabsTrigger>
+            <TabsTrigger value="memory"><Brain className="w-4 h-4 mr-2" />Memory</TabsTrigger>
+            <TabsTrigger value="portfolio"><Wallet className="w-4 h-4 mr-2" />Portfolio</TabsTrigger>
+            <TabsTrigger value="search"><Search className="w-4 h-4 mr-2" />Search</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="tasks">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">任務看板</h2>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleSave}>
-                  <Save className="w-4 h-4 mr-2" />
-                  儲存
-                </Button>
-                <Button size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  新增任務
-                </Button>
-              </div>
-            </div>
-            <TaskBoard tasks={tasks} onStatusChange={handleStatusChange} onSave={handleSave} />
-          </TabsContent>
-
-          <TabsContent value="calendar">
-            <CalendarView events={events} />
-          </TabsContent>
-
-          <TabsContent value="memory">
-            <MemoryLibrary memories={memories} />
-          </TabsContent>
-
-          <TabsContent value="activity">
-            <ActivityFeed activities={activities} />
-          </TabsContent>
-
-          <TabsContent value="search">
-            <GlobalSearch />
-          </TabsContent>
+          <TabsContent value="brief"><DailyBriefView tasks={tasks} events={events} activities={activities} portfolio={portfolio} /></TabsContent>
+          <TabsContent value="tasks"><TaskBoard tasks={tasks} onStatusChange={handleStatusChange} /></TabsContent>
+          <TabsContent value="calendar"><CalendarView events={events} /></TabsContent>
+          <TabsContent value="memory"><MemoryLibrary memories={memories} /></TabsContent>
+          <TabsContent value="portfolio"><PortfolioView portfolio={portfolio} /></TabsContent>
+          <TabsContent value="search"><GlobalSearch /></TabsContent>
         </Tabs>
       </main>
     </div>
