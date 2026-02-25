@@ -281,41 +281,72 @@ function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[
 
 function ReportsView({ reports }: { reports: ReportFile[] }) {
   const [search, setSearch] = useState("")
+  const [selectedReport, setSelectedReport] = useState<ReportFile | null>(null)
   const filtered = reports.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
   const getTypeIcon = (t: string) => t === "report" ? <FileText className="w-4 h-4" /> : t === "data" ? <FolderOpen className="w-4 h-4" /> : <Brain className="w-4 h-4" />
   const getTypeColor = (t: string) => t === "report" ? "bg-blue-500" : t === "data" ? "bg-green-500" : "bg-purple-500"
+
+  // Sample content for preview (in real app, would fetch from API)
+  const getPreviewContent = (r: ReportFile) => {
+    if (r.type === "report") return "📊 投資報告內容預覽...\n\n[Click to view full content]"
+    if (r.type === "data") return "📁 數據文件內容預覽...\n\n[Click to view full content]"
+    return "🧠 記憶內容預覽...\n\n[Click to view full content]"
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="搜尋報告..." 
-            className="pl-10" 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
-          />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Left: Report List */}
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search reports..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          {filtered.map((r) => (
+            <Card key={r.path} className={`hover:shadow-md transition-shadow cursor-pointer ${selectedReport?.path === r.path ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedReport(r)}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg ${getTypeColor(r.type)} flex items-center justify-center text-white`}>
+                      {getTypeIcon(r.type)}
+                    </div>
+                    <CardTitle className="text-lg">{r.name}</CardTitle>
+                  </div>
+                  <Badge variant="outline">{r.type}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{r.path}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
-      <div className="grid gap-4">
-        {filtered.map((r) => (
-          <Card key={r.path} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg ${getTypeColor(r.type)} flex items-center justify-center text-white`}>
-                    {getTypeIcon(r.type)}
-                  </div>
-                  <CardTitle className="text-lg">{r.name}</CardTitle>
-                </div>
-                <Badge variant="outline">{r.type}</Badge>
-              </div>
+
+      {/* Right: Preview Panel */}
+      <div className="space-y-4">
+        {selectedReport ? (
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>{selectedReport.name}</CardTitle>
+              <CardDescription>{selectedReport.path}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{r.path}</p>
+              <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap text-sm font-mono">
+                {getPreviewContent(selectedReport)}
+              </div>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          <Card className="h-full flex items-center justify-center">
+            <CardContent className="text-center text-muted-foreground">
+              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Select a report to preview</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
