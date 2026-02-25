@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { LayoutDashboard, Calendar, Brain, Activity, Search, Moon, Sun, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2 } from "lucide-react"
+import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 
 interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
@@ -74,17 +74,30 @@ function TaskBoard({ tasks, onStatusChange }: { tasks: Task[], onStatusChange: (
     { id: "done", title: "Done", color: "bg-green-100 dark:bg-green-900" }
   ]
   const getPriorityColor = (p: string) => p === "high" ? "bg-red-500" : p === "medium" ? "bg-yellow-500" : "bg-green-500"
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {columns.map((col) => (
         <div key={col.id} className={`rounded-lg p-4 ${col.color}`} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (draggedTask) { onStatusChange(draggedTask, col.id as Task["status"]); setDraggedTask(null) }}}>
-          <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">{col.title}</h3><Badge variant="secondary">{tasks.filter(t => t.status === col.id).length}</Badge></div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">{col.title}</h3>
+            <Badge variant="secondary">{tasks.filter(t => t.status === col.id).length}</Badge>
+          </div>
           <div className="space-y-3">
             {tasks.filter(t => t.status === col.id).map((task) => (
               <Card key={task.id} className="cursor-move hover:shadow-md" draggable onDragStart={() => setDraggedTask(task.id)}>
                 <CardContent className="p-3">
-                  <div className="flex items-start justify-between"><div className="flex-1"><p className="font-medium text-sm">{task.title}</p><p className="text-xs text-muted-foreground mt-1">{task.description}</p></div><div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} /></div>
-                  <div className="flex items-center gap-2 mt-2"><Badge variant="outline" className="text-xs">{task.category}</Badge><Badge variant={task.owner === "OpenClaw" ? "default" : "secondary"} className="text-xs">{task.owner}</Badge></div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{task.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                    </div>
+                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">{task.category}</Badge>
+                    <Badge variant={task.owner === "OpenClaw" ? "default" : "secondary"} className="text-xs">{task.owner}</Badge>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -99,9 +112,22 @@ function CalendarView({ events }: { events: CalendarEvent[] }) {
   const getEventColor = (t: string) => t === "task" ? "bg-blue-500" : t === "meeting" ? "bg-purple-500" : "bg-yellow-500"
   return (
     <div className="space-y-4">
-      <Card><CardContent className="p-4"><div className="space-y-3">
-        {events.map((e) => (<div key={e.id} className={`flex items-center gap-3 p-3 rounded-lg ${getEventColor(e.type)}/10`}><div className={`w-1 h-12 rounded ${getEventColor(e.type)}`} /><div className="flex-1"><p className="font-medium">{e.title}</p><p className="text-xs text-muted-foreground">{format(new Date(e.startDate), "MMM d, h:mm a")}</p></div><Badge variant="outline">{e.type}</Badge></div>))}
-      </div></CardContent></Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            {events.map((e) => (
+              <div key={e.id} className={`flex items-center gap-3 p-3 rounded-lg ${getEventColor(e.type)}/10`}>
+                <div className={`w-1 h-12 rounded ${getEventColor(e.type)}`} />
+                <div className="flex-1">
+                  <p className="font-medium">{e.title}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(e.startDate), "MMM d, h:mm a")}</p>
+                </div>
+                <Badge variant="outline">{e.type}</Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -111,16 +137,59 @@ function MemoryLibrary({ memories }: { memories: Memory[] }) {
   const filtered = memories.filter(m => search === "" || m.title.toLowerCase().includes(search.toLowerCase()) || m.content.toLowerCase().includes(search.toLowerCase()))
   return (
     <div className="space-y-4">
-      <div className="flex gap-2"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search memories..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} /></div></div>
-      <div className="grid gap-4">{filtered.map((m) => (<Card key={m.id}><CardHeader className="pb-2"><div className="flex items-center justify-between"><CardTitle className="text-lg">{m.title}</CardTitle><Badge variant="outline">{m.category}</Badge></div></CardHeader><CardContent><p className="text-sm text-muted-foreground">{m.content}</p><div className="flex gap-2 mt-3">{m.tags.map((t) => (<Badge key={t} variant="secondary" className="text-xs">{t}</Badge>))}</div></CardContent></Card>))}</div>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search memories..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+      <div className="grid gap-4">
+        {filtered.map((m) => (
+          <Card key={m.id}>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{m.title}</CardTitle>
+                <Badge variant="outline">{m.category}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{m.content}</p>
+              <div className="flex gap-2 mt-3">{m.tags.map((t) => (<Badge key={t} variant="secondary" className="text-xs">{t}</Badge>))}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }
 
 function ActivityFeed({ activities }: { activities: ActivityItem[] }) {
   const getColor = (t: string) => t === "task" ? "bg-blue-500" : t === "memory" ? "bg-purple-500" : t === "system" ? "bg-green-500" : "bg-yellow-500"
+  
   return (
-    <div className="space-y-4"><div className="relative"><div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" /><div className="space-y-6">{activities.map((a, i) => (<div key={a.id} className="flex gap-4" style={{ animationDelay: `${i * 0.1}s` }}><div className={`z-10 w-8 h-8 rounded-full ${getColor(a.type)} flex items-center justify-center text-white`}><Activity className="w-4 h-4" /></div><Card className="flex-1"><CardContent className="p-3"><div className="flex items-center justify-between"><p className="font-medium">{a.action}</p><span className="text-xs text-muted-foreground">{format(new Date(a.timestamp), "HH:mm")}</span></div><p className="text-sm text-muted-foreground mt-1">{a.details}</p></CardContent></Card></div></div>))}</div></div></div>
+    <div className="space-y-4">
+      <div className="relative">
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+        <div className="space-y-6">
+          {activities.map((a, i) => (
+            <div key={a.id} className="flex gap-4">
+              <div className={`z-10 w-8 h-8 rounded-full ${getColor(a.type)} flex items-center justify-center text-white`}>
+                <Activity className="w-4 h-4" />
+              </div>
+              <Card className="flex-1">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">{a.action}</p>
+                    <span className="text-xs text-muted-foreground">{format(new Date(a.timestamp), "HH:mm")}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{a.details}</p>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -130,6 +199,7 @@ function PortfolioView({ portfolio }: { portfolio: PortfolioItem[] }) {
   const changePercent = (change / total) * 100
   const getTypeIcon = (t: string) => t === "crypto" ? <DollarSign className="w-4 h-4" /> : t === "bond" ? <PieChart className="w-4 h-4" /> : t === "cash" ? <Wallet className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />
   const getChangeColor = (c: number) => c > 0 ? "text-green-500" : c < 0 ? "text-red-500" : "text-gray-500"
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -138,7 +208,23 @@ function PortfolioView({ portfolio }: { portfolio: PortfolioItem[] }) {
         <Card><CardHeader className="pb-2"><CardDescription>Holdings</CardDescription><CardTitle className="text-2xl">{portfolio.length}</CardTitle></CardHeader></Card>
         <Card><CardHeader className="pb-2"><CardDescription>Cash Level</CardDescription><CardTitle className="text-2xl">{portfolio.find(p => p.type === 'cash')?.allocation || 0}%</CardTitle></CardHeader></Card>
       </div>
-      <Card><CardHeader><CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" />Holdings</CardTitle></CardHeader><CardContent><div className="space-y-4">{portfolio.map((item) => (<div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">{getTypeIcon(item.type)}</div><div><p className="font-medium">{item.name}</p><p className="text-xs text-muted-foreground">{item.symbol}</p></div></div><div className="text-right"><p className="font-medium">${item.value.toLocaleString()}</p><p className={`text-xs ${getChangeColor(item.change24h)}`}>{item.change24h >= 0 ? "+" : ""}{item.change24h}%</p></div><div className="text-right"><p className="text-sm text-muted-foreground">{item.allocation}%</p><div className="w-20 h-2 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary" style={{ width: `${item.allocation}%` }} /></div></div></div>))}</div></CardContent></Card>
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" />Holdings</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {portfolio.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">{getTypeIcon(item.type)}</div>
+                  <div><p className="font-medium">{item.name}</p><p className="text-xs text-muted-foreground">{item.symbol}</p></div>
+                </div>
+                <div className="text-right"><p className="font-medium">${item.value.toLocaleString()}</p><p className={`text-xs ${getChangeColor(item.change24h)}`}>{item.change24h >= 0 ? "+" : ""}{item.change24h}%</p></div>
+                <div className="text-right"><p className="text-sm text-muted-foreground">{item.allocation}%</p><div className="w-20 h-2 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary" style={{ width: `${item.allocation}%` }} /></div></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -146,15 +232,41 @@ function PortfolioView({ portfolio }: { portfolio: PortfolioItem[] }) {
 function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[], events: CalendarEvent[], activities: ActivityItem[], portfolio: PortfolioItem[] }) {
   const today = format(new Date(), 'yyyy-MM-dd')
   const total = portfolio.reduce((s, i) => s + i.value, 0)
+  
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between"><div><h2 className="text-2xl font-bold">Daily Brief</h2><p className="text-muted-foreground">{format(new Date(), 'yyyy-MM-dd')}</p></div><Button onClick={() => exportData({ tasks, memories: [], activities, events, portfolio })}><Download className="w-4 h-4 mr-2" />Export</Button></div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Target className="w-5 h-5" />Tasks Today</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{tasks.filter(t => t.status === 'todo').length}</div><p className="text-blue-100">To Do</p></CardContent></Card>
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Calendar className="w-5 h-5" />Schedule</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">{events.filter(e => format(new Date(e.startDate), 'yyyy-MM-dd') === today).length}</div><p className="text-purple-100">Events</p></CardContent></Card>
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white"><CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Wallet className="w-5 h-5" />Total Assets</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold">${total.toLocaleString()}</div><p className="text-green-100">HKD</p></CardContent></Card>
+      <div className="flex items-center justify-between">
+        <div><h2 className="text-2xl font-bold">Daily Brief</h2><p className="text-muted-foreground">{format(new Date(), 'yyyy-MM-dd')}</p></div>
+        <Button onClick={() => exportData({ tasks, memories: [], activities, events, portfolio })}><Download className="w-4 h-4 mr-2" />Export</Button>
       </div>
-      <Card><CardHeader><CardTitle>Recent Activities</CardTitle></CardHeader><CardContent><div className="space-y-3">{activities.slice(0, 5).map((a) => (<div key={a.id} className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-muted-foreground" /><div className="flex-1"><p className="font-medium">{a.action}</p><p className="text-sm text-muted-foreground">{a.details}</p></div><span className="text-xs text-muted-foreground">{format(new Date(a.timestamp), 'HH:mm')}</span></div>))}</div></CardContent></Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Target className="w-5 h-5" />Tasks Today</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold">{tasks.filter(t => t.status === 'todo').length}</div><p className="text-blue-100">To Do</p></CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Calendar className="w-5 h-5" />Schedule</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold">{events.filter(e => format(new Date(e.startDate), 'yyyy-MM-dd') === today).length}</div><p className="text-purple-100">Events</p></CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-white"><Wallet className="w-5 h-5" />Total Assets</CardTitle></CardHeader>
+          <CardContent><div className="text-3xl font-bold">${total.toLocaleString()}</div><p className="text-green-100">HKD</p></CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader><CardTitle>Recent Activities</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {activities.slice(0, 5).map((a) => (
+              <div key={a.id} className="flex items-center gap-3">
+                <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                <div className="flex-1"><p className="font-medium">{a.action}</p><p className="text-sm text-muted-foreground">{a.details}</p></div>
+                <span className="text-xs text-muted-foreground">{format(new Date(a.timestamp), 'HH:mm')}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -163,7 +275,10 @@ function GlobalSearch() {
   const [query, setQuery] = useState("")
   return (
     <div className="space-y-4">
-      <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" /><Input placeholder="Search tasks, memories, activities..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <Input placeholder="Search tasks, memories, activities..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} />
+      </div>
       {query && <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Searching for "{query}"...</p></CardContent></Card>}
     </div>
   )
