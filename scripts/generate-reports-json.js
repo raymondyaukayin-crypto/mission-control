@@ -61,6 +61,8 @@ if (fs.existsSync(activeTasksPath)) {
 
 // Write to public folder
 const outputPath = path.join(__dirname, '..', 'public', 'reports-data.json');
-fs.writeFileSync(outputPath, JSON.stringify(allReports, null, 2));
+// Write to file with UTF-8 BOM for proper Chinese display
+const utf8Bom = Buffer.from([0xEF, 0xBB, 0xBF]);
+fs.writeFileSync(outputPath, Buffer.concat([utf8Bom, Buffer.from(JSON.stringify(allReports, null, 2))]));
 
 console.log(`Generated ${outputPath} with ${allReports.length} reports`);
