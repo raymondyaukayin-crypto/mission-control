@@ -482,10 +482,14 @@ export default function MissionControl() {
       fetch('/tasks-data.json').then(r => r.json()).catch(() => defaultTasks),
       fetch('/memories-data.json').then(r => r.json()).catch(() => defaultMemories),
       fetch('/portfolio-data.json').then(r => r.json()).catch(() => defaultPortfolio),
-    ]).then(([tasksData, memoriesData, portfolioData]) => {
+      fetch('/events-data.json').then(r => r.json()).catch(() => []),
+      fetch('/activities-data.json').then(r => r.json()).catch(() => []),
+    ]).then(([tasksData, memoriesData, portfolioData, eventsData, activitiesData]) => {
       setTasks(tasksData || defaultTasks)
       setMemories(memoriesData || defaultMemories)
       setPortfolio(portfolioData || defaultPortfolio)
+      setEvents(eventsData || [])
+      setActivities(activitiesData || [])
     })
     setLastSync(new Date().toLocaleTimeString())
   }, [])

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "action": "系統更新",
+    "details": "每日晨報已發送至 Telegram",
+    "type": "system",
+    "timestamp": "2026-02-26T04:36:44.477Z"
+  },
+  {
+    "id": "2",
+    "action": "完成任務",
+    "details": "HKEX 公告已擷取 (202則)",
+    "type": "task",
+    "timestamp": "2026-02-26T04:36:44.477Z"
+  },
+  {
+    "id": "3",
+    "action": "數據同步",
+    "details": "Mission Control 數據已更新",
+    "type": "system",
+    "timestamp": "2026-02-26T04:36:44.477Z"
+  }
+]

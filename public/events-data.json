@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "title": "每日晨報",
+    "startDate": "2026-02-26T07:30:00Z",
+    "type": "reminder"
+  },
+  {
+    "id": "2",
+    "title": "HKEX 公告",
+    "startDate": "2026-02-26T08:30:00Z",
+    "type": "task"
+  },
+  {
+    "id": "3",
+    "title": "偉哥Blog檢查",
+    "startDate": "2026-02-26T08:30:00Z",
+    "type": "task"
+  },
+  {
+    "id": "4",
+    "title": "MC Update",
+    "startDate": "2026-02-26T09:00:00Z",
+    "type": "reminder"
+  }
+]
