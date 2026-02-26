@@ -10,7 +10,7 @@ import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upl
 import { format } from "date-fns"
 
 interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
-interface Memory { id: string; title: string; content: string; category: string; tags: string[]; createdAt: string }
+interface Memory { id: string; title: string; content: string; path?: string; category: string; tags: string[]; createdAt: string }
 interface ActivityItem { id: string; action: string; details: string; type: "task" | "memory" | "system" | "search"; timestamp: string }
 interface CalendarEvent { id: string; title: string; startDate: string; type: "task" | "meeting" | "reminder" }
 interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number }
