@@ -446,25 +446,16 @@ export default function MissionControl() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const saved = loadData()
-    if (saved) {
-      if (saved.tasks) setTasks(saved.tasks)
-      if (saved.memories) setMemories(saved.memories)
-      if (saved.activities) setActivities(saved.activities)
-      if (saved.events) setEvents(saved.events)
-      if (saved.portfolio) setPortfolio(saved.portfolio)
-    } else {
-      // Load from JSON files if no localStorage data
-      Promise.all([
-        fetch('/tasks-data.json').then(r => r.json()).catch(() => defaultTasks),
-        fetch('/memories-data.json').then(r => r.json()).catch(() => defaultMemories),
-        fetch('/portfolio-data.json').then(r => r.json()).catch(() => defaultPortfolio),
-      ]).then(([tasksData, memoriesData, portfolioData]) => {
-        setTasks(tasksData || defaultTasks)
-        setMemories(memoriesData || defaultMemories)
-        setPortfolio(portfolioData || defaultPortfolio)
-      })
-    }
+    // Always load from JSON files (no localStorage)
+    Promise.all([
+      fetch('/tasks-data.json').then(r => r.json()).catch(() => defaultTasks),
+      fetch('/memories-data.json').then(r => r.json()).catch(() => defaultMemories),
+      fetch('/portfolio-data.json').then(r => r.json()).catch(() => defaultPortfolio),
+    ]).then(([tasksData, memoriesData, portfolioData]) => {
+      setTasks(tasksData || defaultTasks)
+      setMemories(memoriesData || defaultMemories)
+      setPortfolio(portfolioData || defaultPortfolio)
+    })
     setLastSync(new Date().toLocaleTimeString())
   }, [])
 
