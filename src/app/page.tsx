@@ -280,17 +280,27 @@ function DailyBriefView({ tasks, events, activities, portfolio }: { tasks: Task[
   )
 }
 
-function ReportsView({ reports: initialReports }: { reports: ReportFile[] }) {
+function ReportsView() {
   const [search, setSearch] = useState("")
   const [selectedReport, setSelectedReport] = useState<ReportFile | null>(null)
+  const [reportList, setReportList] = useState<ReportFile[]>([])
   const [reportContents, setReportContents] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
-  // Fetch report contents on mount
+  // Fetch report list and contents on mount
   useEffect(() => {
     fetch('/reports-data.json')
       .then(res => res.json())
       .then(data => {
+        // Transform array to ReportFile objects
+        const reports: ReportFile[] = data.map((r: any) => ({
+          name: r.name,
+          path: r.path,
+          type: r.path.includes('bitcoin') ? 'report' : r.path.includes('weike') ? 'data' : r.path.includes('memory') ? 'memory' : 'report'
+        }))
+        setReportList(reports)
+        
+        // Also get contents
         const contents: Record<string, string> = {}
         data.forEach((r: any) => {
           contents[r.path] = r.content
@@ -301,7 +311,7 @@ function ReportsView({ reports: initialReports }: { reports: ReportFile[] }) {
       .catch(() => setLoading(false))
   }, [])
 
-  const filtered = initialReports.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = reportList.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
   const getTypeIcon = (t: string) => t === "report" ? <FileText className="w-4 h-4" /> : t === "data" ? <FolderOpen className="w-4 h-4" /> : <Brain className="w-4 h-4" />
   const getTypeColor = (t: string) => t === "report" ? "bg-blue-500" : t === "data" ? "bg-green-500" : "bg-purple-500"
 
@@ -532,7 +542,7 @@ export default function MissionControl() {
           <TabsContent value="calendar"><CalendarView events={events} /></TabsContent>
           <TabsContent value="memory"><MemoryLibrary memories={memories} /></TabsContent>
           <TabsContent value="portfolio"><PortfolioView portfolio={portfolio} /></TabsContent>
-          <TabsContent value="reports"><ReportsView reports={reports} /></TabsContent>
+          <TabsContent value="reports"><ReportsView /></TabsContent>
           <TabsContent value="search"><GlobalSearch /></TabsContent>
         </Tabs>
       </main>
