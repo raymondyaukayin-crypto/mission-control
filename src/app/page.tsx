@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, Folder, ExternalLink, RefreshCw } from "lucide-react"
+import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, Folder, ChevronDown, ChevronRight, ExternalLink, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 
 interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
@@ -323,6 +323,8 @@ function ReportsView() {
     return content
   }
 
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({})
+  
   // Group reports by folder/category
   const groupedReports = filtered.reduce((acc, r) => {
     const category = r.category || 'Other'
@@ -330,6 +332,10 @@ function ReportsView() {
     acc[category].push(r)
     return acc
   }, {} as Record<string, ReportFile[]>)
+
+  const toggleFolder = (cat: string) => {
+    setExpandedFolders(prev => ({ ...prev, [cat]: !prev[cat] }))
+  }
 
   const categoryOrder = ['HKEX', 'Weike', 'Other']
 
@@ -346,24 +352,27 @@ function ReportsView() {
         <div className="space-y-4">
           {categoryOrder.filter(cat => groupedReports[cat]?.length).map(category => (
             <div key={category} className="border rounded-lg overflow-hidden">
-              <div className="bg-muted px-4 py-2 font-semibold flex items-center gap-2">
+              <div className="bg-muted px-4 py-2 font-semibold flex items-center gap-2 cursor-pointer hover:bg-muted/80" onClick={() => toggleFolder(category)}>
+                {expandedFolders[category] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 <Folder className="w-4 h-4" />
                 {category} ({groupedReports[category].length})
               </div>
-              <div className="divide-y">
-                {groupedReports[category].map((r) => (
-                  <Card key={r.path} className={`hover:shadow-md transition-shadow cursor-pointer border-0 border-b ${selectedReport?.path === r.path ? 'ring-2 ring-primary bg-primary/5' : ''}`} onClick={() => setSelectedReport(r)}>
-                    <CardHeader className="py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium truncate">{r.name}</span>
+              {expandedFolders[category] !== false && (
+                <div className="divide-y">
+                  {groupedReports[category].map((r) => (
+                    <Card key={r.path} className={`hover:shadow-md transition-shadow cursor-pointer border-0 border-b ${selectedReport?.path === r.path ? 'ring-2 ring-primary bg-primary/5' : ''}`} onClick={() => setSelectedReport(r)}>
+                      <CardHeader className="py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm font-medium truncate">{r.name}</span>
+                          </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
