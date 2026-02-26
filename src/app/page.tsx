@@ -284,15 +284,15 @@ function ReportsView() {
   const [search, setSearch] = useState("")
   const [selectedReport, setSelectedReport] = useState<ReportFile | null>(null)
   const [reportList, setReportList] = useState<ReportFile[]>([])
-  const [reportContents, setReportContents] = useState<Record<string, string>>({})
+  const [selectedContent, setSelectedContent] = useState<string>("")
   const [loading, setLoading] = useState(true)
+  const [contentLoading, setContentLoading] = useState(false)
 
-  // Fetch report list and contents on mount
+  // Fetch report list on mount
   useEffect(() => {
     fetch('/reports-data.json')
       .then(res => res.json())
       .then(data => {
-        // Transform array to ReportFile objects - preserve category from JSON
         const reports: ReportFile[] = data.map((r: any) => ({
           name: r.name,
           path: r.path,
@@ -300,28 +300,42 @@ function ReportsView() {
           category: r.category || (r.path.includes('reports') ? 'HKEX' : r.path.includes('weike') ? 'Weike' : 'Other')
         }))
         setReportList(reports)
-        
-        // Also get contents
-        const contents: Record<string, string> = {}
-        data.forEach((r: any) => {
-          contents[r.path] = r.content
-        })
-        setReportContents(contents)
         setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [])
 
+  // Fetch content when report is selected
+  useEffect(() => {
+    if (!selectedReport) {
+      setSelectedContent("")
+      return
+    }
+    
+    setContentLoading(true)
+    // Fetch the actual file content
+    fetch('/' + selectedReport.path)
+      .then(res => res.text())
+      .then(text => {
+        setSelectedContent(text)
+        setContentLoading(false)
+      })
+      .catch(() => {
+        setSelectedContent("無法載入內容")
+        setContentLoading(false)
+      })
+  }, [selectedReport])
+
   const filtered = reportList.filter(r => search === "" || r.name.toLowerCase().includes(search.toLowerCase()))
   const getTypeIcon = (t: string) => t === "report" ? <FileText className="w-4 h-4" /> : t === "data" ? <FolderOpen className="w-4 h-4" /> : <Brain className="w-4 h-4" />
   const getTypeColor = (t: string) => t === "report" ? "bg-blue-500" : t === "data" ? "bg-green-500" : "bg-purple-500"
 
-  // Get actual content from fetched data
-  const getPreviewContent = (r: ReportFile) => {
+  // Get preview content for selected report
+  const getPreviewContent = () => {
     if (loading) return "載入中..."
-    const content = reportContents[r.path]
-    if (!content) return "無內容"
-    return content
+    if (!selectedReport) return "選擇一個報告查看內容"
+    if (contentLoading) return "載入內容中..."
+    return selectedContent || "無內容"
   }
 
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({})
@@ -389,7 +403,7 @@ function ReportsView() {
             </CardHeader>
             <CardContent>
               <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap text-sm font-mono">
-                {getPreviewContent(selectedReport)}
+                {getPreviewContent()}
               </div>
             </CardContent>
           </Card>
