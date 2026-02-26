@@ -13,7 +13,7 @@ interface Task { id: string; title: string; description: string; status: "todo" 
 interface Memory { id: string; title: string; content: string; path?: string; category: string; tags: string[]; createdAt: string }
 interface ActivityItem { id: string; action: string; details: string; type: "task" | "memory" | "system" | "search"; timestamp: string }
 interface CalendarEvent { id: string; title: string; startDate: string; type: "task" | "meeting" | "reminder" }
-interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number }
+interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number; price?: number }
 interface ReportFile { name: string; path: string; type: "report" | "data" | "memory" | "other"; category?: string }
 
 const defaultTasks: Task[] = [
@@ -451,15 +451,71 @@ function ReportsView() {
   )
 }
 
-function GlobalSearch() {
+function GlobalSearch({ tasks, memories, activities, reports, portfolio }: { tasks: Task[], memories: Memory[], activities: ActivityItem[], reports: ReportFile[], portfolio: PortfolioItem[] }) {
   const [query, setQuery] = useState("")
+  const [results, setResults] = useState<{type: string, title: string, subtitle: string}[]>([])
+  
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setResults([])
+      return
+    }
+    
+    const q = query.toLowerCase()
+    const found: {type: string, title: string, subtitle: string}[] = []
+    
+    // Search tasks
+    tasks.filter(t => t.title.toLowerCase().includes(q)).forEach(t => {
+      found.push({ type: '任務', title: t.title, subtitle: t.status })
+    })
+    
+    // Search memories
+    memories.filter(m => m.title.toLowerCase().includes(q) || m.content.toLowerCase().includes(q)).forEach(m => {
+      found.push({ type: '記憶', title: m.title, subtitle: m.category })
+    })
+    
+    // Search activities
+    activities.filter(a => a.action.toLowerCase().includes(q) || a.details.toLowerCase().includes(q)).forEach(a => {
+      found.push({ type: '活動', title: a.action, subtitle: a.details.slice(0, 50) })
+    })
+    
+    // Search reports
+    reports.filter(r => r.name.toLowerCase().includes(q)).forEach(r => {
+      found.push({ type: '報告', title: r.name, subtitle: r.category || 'Other' })
+    })
+    
+    // Search portfolio
+    portfolio.filter(p => p.name.toLowerCase().includes(q) || p.symbol.toLowerCase().includes(q)).forEach(p => {
+      found.push({ type: '組合', title: p.name, subtitle: `${p.symbol} $${p.price?.toFixed(2) || '0'}` })
+    })
+    
+    setResults(found.slice(0, 20))
+  }, [query, tasks, memories, activities, reports, portfolio])
+  
   return (
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input placeholder="搜尋任務、記憶、活動..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input placeholder="搜尋任務、記憶、活動、報告、組合..." className="pl-12 text-lg h-14" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
-      {query && <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Searching for "{query}"...</p></CardContent></Card>}
+      {query && query.length >= 2 && (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">找到 {results.length} 個結果</p>
+          {results.map((r, i) => (
+            <Card key={i} className="hover:bg-muted/50 cursor-pointer">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge variant="outline" className="mr-2">{r.type}</Badge>
+                    <span className="font-medium">{r.title}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">{r.subtitle}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -618,7 +674,7 @@ export default function MissionControl() {
           <TabsContent value="memory"><MemoryLibrary memories={memories} /></TabsContent>
           <TabsContent value="portfolio"><PortfolioView portfolio={portfolio} /></TabsContent>
           <TabsContent value="reports"><ReportsView /></TabsContent>
-          <TabsContent value="search"><GlobalSearch /></TabsContent>
+          <TabsContent value="search"><GlobalSearch tasks={tasks} memories={memories} activities={activities} reports={reports} portfolio={portfolio} /></TabsContent>
         </Tabs>
       </main>
     </div>

@@ -1,56 +1,50 @@
 [
   {
-    "id": "1",
+    "id": "BTC",
     "name": "比特幣",
     "symbol": "BTC",
     "type": "crypto",
-    "value": 50000,
-    "change24h": 3.5,
-    "allocation": 25
+    "price": 68358,
+    "change24h": 5.080642362823738
   },
   {
-    "id": "2",
+    "id": "ETH",
+    "name": "以太坊",
+    "symbol": "ETH",
+    "type": "crypto",
+    "price": 2064.7,
+    "change24h": 9.36262516590399
+  },
+  {
+    "id": "9988.HK",
     "name": "阿里巴巴",
     "symbol": "9988.HK",
     "type": "stock",
-    "value": 30000,
-    "change24h": -1.2,
-    "allocation": 15
+    "price": 0,
+    "change24h": 0
   },
   {
-    "id": "3",
+    "id": "0941.HK",
     "name": "中移動",
     "symbol": "0941.HK",
     "type": "stock",
-    "value": 20000,
-    "change24h": 0.5,
-    "allocation": 10
+    "price": 0,
+    "change24h": 0
   },
   {
-    "id": "4",
+    "id": "IBIT",
     "name": "iShares BTC ETF",
     "symbol": "IBIT",
     "type": "stock",
-    "value": 20000,
-    "change24h": 1.8,
-    "allocation": 10
+    "price": 0,
+    "change24h": 0
   },
   {
-    "id": "5",
-    "name": "Cash",
-    "symbol": "CASH",
-    "type": "cash",
-    "value": 50000,
-    "change24h": 0,
-    "allocation": 25
-  },
-  {
-    "id": "6",
-    "name": "US Treasury",
-    "symbol": "TLT",
-    "type": "bond",
-    "value": 10000,
-    "change24h": 0.2,
-    "allocation": 5
+    "id": "BILI",
+    "name": "嗶哩嗶哩",
+    "symbol": "BILI",
+    "type": "stock",
+    "price": 0,
+    "change24h": 0
   }
 ]
