@@ -143,30 +143,61 @@ function CalendarView({ events }: { events: CalendarEvent[] }) {
 
 function MemoryLibrary({ memories }: { memories: Memory[] }) {
   const [search, setSearch] = useState("")
+  const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null)
   const filtered = memories.filter(m => search === "" || m.title.toLowerCase().includes(search.toLowerCase()) || m.content.toLowerCase().includes(search.toLowerCase()))
+  
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="搜尋記憶..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Left: Memory List */}
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="搜尋記憶..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          {filtered.map((m) => (
+            <Card key={m.id} className={`hover:shadow-md transition-shadow cursor-pointer ${selectedMemory?.id === m.id ? 'ring-2 ring-primary bg-primary/5' : ''}`} onClick={() => setSelectedMemory(m)}>
+              <CardHeader className="py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium truncate">{m.title}</span>
+                  </div>
+                  <Badge variant="outline">{m.category}</Badge>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
         </div>
       </div>
-      <div className="grid gap-4">
-        {filtered.map((m) => (
-          <Card key={m.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{m.title}</CardTitle>
-                <Badge variant="outline">{m.category}</Badge>
-              </div>
+      
+      {/* Right: Content Preview */}
+      <div className="space-y-4">
+        {selectedMemory ? (
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>{selectedMemory.title}</CardTitle>
+              <CardDescription>{selectedMemory.category} • {new Date(selectedMemory.createdAt).toLocaleDateString()}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{m.content}</p>
-              <div className="flex gap-2 mt-3">{m.tags.map((t) => (<Badge key={t} variant="secondary" className="text-xs">{t}</Badge>))}</div>
+              <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap text-sm font-mono max-h-[500px] overflow-y-auto">
+                {selectedMemory.content}
+              </div>
+              <div className="flex gap-2 mt-3">
+                {selectedMemory.tags.map((t) => (<Badge key={t} variant="secondary" className="text-xs">{t}</Badge>))}
+              </div>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          <Card className="h-full flex items-center justify-center">
+            <CardContent className="text-center text-muted-foreground">
+              <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>選擇一個記憶查看內容</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
