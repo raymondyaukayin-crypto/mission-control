@@ -26,13 +26,20 @@ function readDirRecursive(dir, extensions = ['.md']) {
     } else if (extensions.some(ext => item.endsWith(ext))) {
       const content = fs.readFileSync(fullPath, 'utf8');
       const relativePath = path.relative(workspaceRoot, fullPath).replace(/\\/g, '/');
+      
+      // Determine category based on path
+      let category = 'Other';
+      if (relativePath.startsWith('reports/')) category = 'HKEX';
+      else if (relativePath.startsWith('data/weike_investment')) category = 'Weike';
+      
       results.push({
         name: item.replace('.md', ''),
         path: relativePath,
         content: content.substring(0, 5000),
         type: relativePath.startsWith('reports/') ? 'report' : 
               relativePath.startsWith('data/') ? 'data' : 
-              relativePath.startsWith('memory/') ? 'memory' : 'other'
+              relativePath.startsWith('memory/') ? 'memory' : 'other',
+        category: category
       });
     }
   }
