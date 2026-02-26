@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, ExternalLink, RefreshCw } from "lucide-react"
+import { LayoutDashboard, Calendar, Brain, Activity, Search, Save, Download, Upload, Wallet, TrendingUp, DollarSign, PieChart, Briefcase, Target, CheckCircle2, FileText, FolderOpen, Folder, ExternalLink, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 
 interface Task { id: string; title: string; description: string; status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high"; owner: "OpenClaw" | "Raymond" | "Both"; category: string; createdAt: string; updatedAt: string }
@@ -14,7 +14,7 @@ interface Memory { id: string; title: string; content: string; category: string;
 interface ActivityItem { id: string; action: string; details: string; type: "task" | "memory" | "system" | "search"; timestamp: string }
 interface CalendarEvent { id: string; title: string; startDate: string; type: "task" | "meeting" | "reminder" }
 interface PortfolioItem { id: string; name: string; symbol: string; type: "stock" | "crypto" | "bond" | "cash"; value: number; change24h: number; allocation: number }
-interface ReportFile { name: string; path: string; type: "report" | "data" | "memory" | "other" }
+interface ReportFile { name: string; path: string; type: "report" | "data" | "memory" | "other"; category?: string }
 
 const defaultTasks: Task[] = [
   { id: "1", title: "研究比特幣投資機會", description: "分析比特幣市場", status: "done", priority: "high", owner: "OpenClaw", category: "投資", createdAt: "2026-02-25T10:00:00Z", updatedAt: "2026-02-25T14:58:00Z" },
@@ -323,9 +323,19 @@ function ReportsView() {
     return content
   }
 
+  // Group reports by folder/category
+  const groupedReports = filtered.reduce((acc, r) => {
+    const category = r.category || 'Other'
+    if (!acc[category]) acc[category] = []
+    acc[category].push(r)
+    return acc
+  }, {} as Record<string, ReportFile[]>)
+
+  const categoryOrder = ['HKEX', 'Weike', 'Other']
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* Left: Report List */}
+      {/* Left: Report List with Folders */}
       <div className="space-y-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -333,24 +343,28 @@ function ReportsView() {
             <Input placeholder="Search reports..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
-        <div className="space-y-2">
-          {filtered.map((r) => (
-            <Card key={r.path} className={`hover:shadow-md transition-shadow cursor-pointer ${selectedReport?.path === r.path ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedReport(r)}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg ${getTypeColor(r.type)} flex items-center justify-center text-white`}>
-                      {getTypeIcon(r.type)}
-                    </div>
-                    <CardTitle className="text-lg">{r.name}</CardTitle>
-                  </div>
-                  <Badge variant="outline">{r.type}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{r.path}</p>
-              </CardContent>
-            </Card>
+        <div className="space-y-4">
+          {categoryOrder.filter(cat => groupedReports[cat]?.length).map(category => (
+            <div key={category} className="border rounded-lg overflow-hidden">
+              <div className="bg-muted px-4 py-2 font-semibold flex items-center gap-2">
+                <Folder className="w-4 h-4" />
+                {category} ({groupedReports[category].length})
+              </div>
+              <div className="divide-y">
+                {groupedReports[category].map((r) => (
+                  <Card key={r.path} className={`hover:shadow-md transition-shadow cursor-pointer border-0 border-b ${selectedReport?.path === r.path ? 'ring-2 ring-primary bg-primary/5' : ''}`} onClick={() => setSelectedReport(r)}>
+                    <CardHeader className="py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium truncate">{r.name}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -415,6 +429,17 @@ export default function MissionControl() {
       if (saved.activities) setActivities(saved.activities)
       if (saved.events) setEvents(saved.events)
       if (saved.portfolio) setPortfolio(saved.portfolio)
+    } else {
+      // Load from JSON files if no localStorage data
+      Promise.all([
+        fetch('/tasks-data.json').then(r => r.json()).catch(() => defaultTasks),
+        fetch('/memories-data.json').then(r => r.json()).catch(() => defaultMemories),
+        fetch('/portfolio-data.json').then(r => r.json()).catch(() => defaultPortfolio),
+      ]).then(([tasksData, memoriesData, portfolioData]) => {
+        setTasks(tasksData || defaultTasks)
+        setMemories(memoriesData || defaultMemories)
+        setPortfolio(portfolioData || defaultPortfolio)
+      })
     }
     setLastSync(new Date().toLocaleTimeString())
   }, [])

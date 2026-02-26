@@ -1,0 +1,18 @@
+[
+  {
+    "id": "1",
+    "title": "2026-02-26 工作日誌",
+    "content": "# 2026-02-26 工作日誌\n\n## Heartbeat 07:25 (晨報)\n\n- 系統狀態：正常\n- 晨報已發送至 Telegram\n- Crypto 市場上升：BTC +6.52%, ETH +11.38%, SOL +12.27%\n\n## 待辨事項\n\n- [ ] 設定 TELEGRAM_BOT_TOKEN 同 TELEGRAM_CHAT_ID\n- [ ] 了解更多投資組合詳情以便監控",
+    "category": "Memory",
+    "tags": [],
+    "createdAt": "2026-02-26T03:25:41.277Z"
+  },
+  {
+    "id": "2",
+    "title": "2026-02-26 工作日誌",
+    "content": "# 2026-02-26 工作日誌\n\n## 完成事項\n\n### 系統設定\n- ✅ Set up Windows Task Scheduler cron jobs:\n  - OpenClaw_DailyBrief (07:30)\n  - OpenClaw_HKEX (08:30)\n  - OpenClaw_WeikeBlog (08:30)\n  - OpenClaw_MC_Update (09:00",
+    "category": "Memory",
+    "tags": [],
+    "createdAt": "2026-02-26T03:25:41.278Z"
+  }
+]
