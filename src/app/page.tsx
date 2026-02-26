@@ -292,11 +292,12 @@ function ReportsView() {
     fetch('/reports-data.json')
       .then(res => res.json())
       .then(data => {
-        // Transform array to ReportFile objects
+        // Transform array to ReportFile objects - preserve category from JSON
         const reports: ReportFile[] = data.map((r: any) => ({
           name: r.name,
           path: r.path,
-          type: r.path.includes('bitcoin') ? 'report' : r.path.includes('weike') ? 'data' : r.path.includes('memory') ? 'memory' : 'report'
+          type: r.type || (r.path.includes('weike') ? 'data' : 'report'),
+          category: r.category || (r.path.includes('reports') ? 'HKEX' : r.path.includes('weike') ? 'Weike' : 'Other')
         }))
         setReportList(reports)
         
